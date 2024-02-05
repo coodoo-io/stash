@@ -173,17 +173,21 @@ abstract class PersistenceStore<I extends Info, E extends Entry<I>>
   ///
   /// Returns the decoded value from the provided value
   @protected
-  dynamic decodeValue(
-      dynamic value, dynamic Function(Map<String, dynamic>)? fromEncodable,
-      {ValueProcessor processor = ValueProcessor.none,
-      List<int> Function(dynamic)? process}) {
+  dynamic decodeValue(dynamic value, dynamic Function(Map<String, dynamic>)? fromEncodable,
+      {ValueProcessor processor = ValueProcessor.none, List<int> Function(dynamic)? process}) {
     List<int> bytes;
     if (processor == ValueProcessor.custom && process != null) {
       bytes = process(value);
     } else if (processor == ValueProcessor.cast) {
       bytes = (value as List).cast<int>();
-    } else {
-      bytes = value as List<int>;
+    }  else {
+      if(value is String) {
+        return value;
+      } else if(value is Map && fromEncodable!=null) {
+        return fromEncodable(value.cast<String, dynamic>());
+      } else {
+        bytes = value as List<int>;
+      }
     }
 
     return decodeBinaryValue(Uint8List.fromList(bytes), fromEncodable);
